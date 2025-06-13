@@ -9,15 +9,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExternalServicesModule = void 0;
 const common_1 = require("@nestjs/common");
 const openai_service_1 = require("./services/openai.service");
+const pinecone_service_1 = require("./services/pinecone.service");
 const file_service_1 = require("./services/file.service");
 const replicate_service_1 = require("./services/replicate.service");
+const config_1 = require("@nestjs/config");
 let ExternalServicesModule = class ExternalServicesModule {
 };
 exports.ExternalServicesModule = ExternalServicesModule;
 exports.ExternalServicesModule = ExternalServicesModule = __decorate([
     (0, common_1.Module)({
-        providers: [openai_service_1.OpenAiService, replicate_service_1.ReplicateService, file_service_1.FileService],
-        exports: [openai_service_1.OpenAiService, replicate_service_1.ReplicateService, file_service_1.FileService],
+        imports: [config_1.ConfigModule],
+        providers: [openai_service_1.OpenAiService, pinecone_service_1.PineconeService, replicate_service_1.ReplicateService, file_service_1.FileService],
+        exports: [openai_service_1.OpenAiService, pinecone_service_1.PineconeService, replicate_service_1.ReplicateService, file_service_1.FileService],
     })
 ], ExternalServicesModule);
 //# sourceMappingURL=external-services.module.js.map

@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { SpiritualGuidesModule } from './spiritual-guides/spiritual-guides.module';
+import { ChatModule } from './chat/chat.module';
 import { CustomLoggerService } from './common/logger/logger.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -30,6 +31,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     // Módulos de la aplicación
     UsersModule,
     SpiritualGuidesModule,
+    ChatModule,
     ExternalServicesModule,
   ],
   controllers: [AppController],

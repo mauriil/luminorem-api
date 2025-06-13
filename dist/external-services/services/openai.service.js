@@ -122,6 +122,128 @@ ${surveyAnswers.map((r, i) => `${i + 1}. ${r}`).join('\n')}
             throw new Error(`Error generating image: ${error.message}`);
         }
     }
+    async generateEmbedding(text) {
+        try {
+            const response = await this.openai.embeddings.create({
+                model: 'text-embedding-3-small',
+                input: text,
+            });
+            return response.data[0].embedding;
+        }
+        catch (error) {
+            throw new Error(`Error generating embedding: ${error.message}`);
+        }
+    }
+    async generateChatResponse(messages, temperature = 0.7) {
+        try {
+            const completion = await this.openai.chat.completions.create({
+                model: 'gpt-4o',
+                messages,
+                temperature,
+                max_tokens: 1000,
+                tools: [
+                    {
+                        type: "function",
+                        function: {
+                            name: "web_search_preview",
+                            description: "Busca información actualizada en la web sobre cualquier tema",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    query: {
+                                        type: "string",
+                                        description: "La consulta de búsqueda a realizar"
+                                    }
+                                },
+                                required: ["query"]
+                            }
+                        }
+                    }
+                ],
+            });
+            const message = completion.choices[0].message;
+            if (message.tool_calls && message.tool_calls.length > 0) {
+                const toolCall = message.tool_calls[0];
+                if (toolCall.function.name === 'web_search_preview') {
+                    const searchQuery = JSON.parse(toolCall.function.arguments).query;
+                    const searchResults = await this.searchWeb(searchQuery);
+                    const finalCompletion = await this.openai.chat.completions.create({
+                        model: 'gpt-4o',
+                        messages: [
+                            ...messages,
+                            {
+                                role: 'assistant',
+                                content: null,
+                                tool_calls: message.tool_calls
+                            },
+                            {
+                                role: 'tool',
+                                content: searchResults,
+                                tool_call_id: toolCall.id
+                            }
+                        ],
+                        temperature,
+                        max_tokens: 1000,
+                    });
+                    return finalCompletion.choices[0].message.content;
+                }
+            }
+            return message.content;
+        }
+        catch (error) {
+            throw new Error(`Error generating chat response: ${error.message}`);
+        }
+    }
+    async searchWeb(query) {
+        try {
+            const lowerQuery = query.toLowerCase();
+            if (lowerQuery.includes('fecha') || lowerQuery.includes('día') || lowerQuery.includes('hoy') || lowerQuery.includes('today')) {
+                const now = new Date();
+                const dateOptions = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    timeZone: 'America/Mexico_City'
+                };
+                const timeOptions = {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/Mexico_City'
+                };
+                const currentDate = now.toLocaleDateString('es-MX', dateOptions);
+                const currentTime = now.toLocaleTimeString('es-MX', timeOptions);
+                return `📅 **Información actual:**\n\n**Fecha:** ${currentDate}\n**Hora:** ${currentTime} (hora de México)\n\nEsta información está actualizada en tiempo real.`;
+            }
+            if (lowerQuery.includes('año') || lowerQuery.includes('2024') || lowerQuery.includes('2025')) {
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Date().toLocaleDateString('es-MX', { month: 'long' });
+                return `📅 **Información temporal actualizada:**\n\n**Año actual:** ${currentYear}\n**Mes actual:** ${currentMonth}\n\nEsta información está actualizada automáticamente.`;
+            }
+            const braveApiKey = this.configService.get('BRAVE_API_KEY');
+            if (braveApiKey) {
+                const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Accept-Encoding': 'gzip',
+                        'X-Subscription-Token': braveApiKey
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.web && data.web.results && data.web.results.length > 0) {
+                        const results = data.web.results.slice(0, 3).map((result) => `**${result.title}**\n${result.description}\nFuente: ${result.url}`).join('\n\n');
+                        return `🌐 **Información actualizada de la web sobre "${query}":**\n\n${results}`;
+                    }
+                }
+            }
+            return `🔍 **Búsqueda solicitada:** "${query}"\n\n⚠️ **Nota:** No tengo acceso a información actualizada de la web en este momento. Mi conocimiento se limita a información hasta abril de 2024.\n\n**Para información actualizada, te recomiendo:**\n- Consultar sitios web confiables\n- Verificar noticias recientes\n- Usar motores de búsqueda actualizados\n\n¿Hay algo específico de mi conocimiento base que pueda ayudarte?`;
+        }
+        catch (error) {
+            console.error('Error searching web:', error);
+            return `❌ **Error en la búsqueda**\n\nOcurrió un problema al buscar información actualizada. Mi conocimiento se limita a información hasta abril de 2024.\n\n¿Puedo ayudarte con algo específico de mi conocimiento base?`;
+        }
+    }
     optimizeDallePrompt(prompt) {
         let p = prompt.replace(/\b(two|pair|twins?|multiple|duo)\b/gi, 'single');
         const banWords = [

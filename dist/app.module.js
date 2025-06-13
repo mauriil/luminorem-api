@@ -16,6 +16,7 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const users_module_1 = require("./users/users.module");
 const spiritual_guides_module_1 = require("./spiritual-guides/spiritual-guides.module");
+const chat_module_1 = require("./chat/chat.module");
 const logger_service_1 = require("./common/logger/logger.service");
 const logging_interceptor_1 = require("./common/interceptors/logging.interceptor");
 let AppModule = class AppModule {
@@ -37,6 +38,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             users_module_1.UsersModule,
             spiritual_guides_module_1.SpiritualGuidesModule,
+            chat_module_1.ChatModule,
             external_services_module_1.ExternalServicesModule,
         ],
         controllers: [app_controller_1.AppController],

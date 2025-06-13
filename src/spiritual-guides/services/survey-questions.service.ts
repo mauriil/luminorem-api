@@ -25,7 +25,7 @@ export class SurveyQuestionsService {
   async seedInitialQuestions(): Promise<void> {
     const count = await this.surveyQuestionModel.countDocuments();
     if (count > 0) {
-      return; // Ya hay preguntas, no hacer nada
+      return;
     }
 
     const preguntasRefinadas = [

@@ -48,7 +48,6 @@ export class SpiritualGuide {
   @Prop()
   dallePrompt?: string;
 
-  // Status fields para trackear el progreso
   @Prop({ enum: GenerationStatus, default: GenerationStatus.PENDING })
   imageStatus: GenerationStatus;
 
@@ -58,11 +57,9 @@ export class SpiritualGuide {
   @Prop({ enum: GenerationStatus, default: GenerationStatus.PENDING })
   boomerangStatus: GenerationStatus;
 
-  // Para trackear el progreso general
   @Prop({ default: false })
   isFullyGenerated: boolean;
 
-  // Errores si algo falla
   @Prop()
   imageError?: string;
 
